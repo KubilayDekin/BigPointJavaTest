@@ -47,23 +47,30 @@ public class StandardGasStation implements GasStation {
     public double buyGas(GasType type, double amountInLiters, double maxPricePerLiter)
             throws NotEnoughGasException, GasTooExpensiveException {
         synchronized (lock) {
-            GasPump pump = gasPumps.get(type);
-            if (pump == null || pump.getRemainingAmount() < amountInLiters) {
-                numberOfCancellationsNoGas++;
-                throw new NotEnoughGasException();
+            GasPump pump;
+
+            synchronized (lock) {
+                pump = gasPumps.get(type);
+                if (pump == null || pump.getRemainingAmount() < amountInLiters) {
+                    numberOfCancellationsNoGas++;
+                    throw new NotEnoughGasException();
+                }
             }
 
-            double price = getPrice(type);
-            if (price > maxPricePerLiter) {
-                numberOfCancellationsTooExpensive++;
-                throw new GasTooExpensiveException();
-            }
+            synchronized (pump) {
+                double price = getPrice(type);
+                if (price > maxPricePerLiter) {
+                    numberOfCancellationsTooExpensive++;
+                    throw new GasTooExpensiveException();
+                }
 
-            double totalPrice = price * amountInLiters;
-            pump.pumpGas(amountInLiters);
-            revenue += totalPrice;
-            numberOfSales++;
-            return totalPrice;
+                double totalPrice = price * amountInLiters;
+                pump.pumpGas(amountInLiters);
+                revenue += totalPrice;
+                numberOfSales++;
+
+                return totalPrice;
+            }
         }
     }
 
