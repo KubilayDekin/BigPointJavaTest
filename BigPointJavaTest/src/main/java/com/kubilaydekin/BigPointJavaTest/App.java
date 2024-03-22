@@ -13,7 +13,7 @@ public class App
 {
     public static void main( String[] args )
     {
-    	 StandartGasStation gasStation = new StandartGasStation();
+    	 StandardGasStation gasStation = new StandardGasStation();
          
          GasPump regularPump = new GasPump(GasType.REGULAR, 1000);
          GasPump superPump = new GasPump(GasType.SUPER, 500);

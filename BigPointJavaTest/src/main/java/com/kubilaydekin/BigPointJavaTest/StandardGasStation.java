@@ -10,7 +10,7 @@ import net.bigpoint.assessment.gasstation.exceptions.GasTooExpensiveException;
 import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 
 
-public class StandartGasStation implements GasStation {
+public class StandardGasStation implements GasStation {
 
     private Map<GasType, Double> gasPrices;
     private Map<GasType, GasPump> gasPumps;
@@ -20,7 +20,7 @@ public class StandartGasStation implements GasStation {
     private int numberOfCancellationsTooExpensive;
     private final Object lock = new Object();
 
-    public StandartGasStation() {
+    public StandardGasStation() {
         this.gasPrices = new HashMap<>();
         this.gasPumps = new HashMap<>();
         this.revenue = 0;
