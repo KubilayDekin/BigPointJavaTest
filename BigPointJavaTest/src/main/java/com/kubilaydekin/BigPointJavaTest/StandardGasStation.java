@@ -19,6 +19,7 @@ public class StandardGasStation implements GasStation {
     private int numberOfCancellationsNoGas;
     private int numberOfCancellationsTooExpensive;
     private final Object lock = new Object();
+    private final Object revenueLock = new Object();
 
     public StandardGasStation() {
         this.gasPrices = new HashMap<>();
@@ -46,31 +47,34 @@ public class StandardGasStation implements GasStation {
     @Override
     public double buyGas(GasType type, double amountInLiters, double maxPricePerLiter)
             throws NotEnoughGasException, GasTooExpensiveException {
+        GasPump pump;
+        double price;
+
         synchronized (lock) {
-            GasPump pump;
-
-            synchronized (lock) {
-                pump = gasPumps.get(type);
-                if (pump == null || pump.getRemainingAmount() < amountInLiters) {
-                    numberOfCancellationsNoGas++;
-                    throw new NotEnoughGasException();
-                }
+            pump = gasPumps.get(type);
+            if (pump == null || pump.getRemainingAmount() < amountInLiters) {
+                numberOfCancellationsNoGas++;
+                throw new NotEnoughGasException();
             }
+            
+            price = getPrice(type);
+        }
 
-            synchronized (pump) {
-                double price = getPrice(type);
-                if (price > maxPricePerLiter) {
-                    numberOfCancellationsTooExpensive++;
-                    throw new GasTooExpensiveException();
-                }
+        if (price > maxPricePerLiter) {
+            numberOfCancellationsTooExpensive++;
+            throw new GasTooExpensiveException();
+        }
 
-                double totalPrice = price * amountInLiters;
-                pump.pumpGas(amountInLiters);
+        synchronized (pump) {
+            double totalPrice = price * amountInLiters;
+            pump.pumpGas(amountInLiters);
+            
+            synchronized (revenueLock) {
                 revenue += totalPrice;
                 numberOfSales++;
-
-                return totalPrice;
             }
+
+            return totalPrice;
         }
     }
 
